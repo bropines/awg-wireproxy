@@ -15,9 +15,8 @@ interface for whatever reasons.
 # Credits & Authorship
 
 This project is a heavily modified fork standing on the shoulders of giants:
-- **[octeep/wireproxy](https://github.com/octeep/wireproxy)**: The original creator of wireproxy.
+- **[windtf/wireproxy](https://github.com/windtf/wireproxy)** (formerly octeep): The original creator and upstream maintainer.
 - **[artem-russkikh/wireproxy-awg](https://github.com/artem-russkikh/wireproxy-awg)**: Added AmneziaWG (AWG) support.
-- **[windtf/wireproxy](https://github.com/windtf/wireproxy)**: Various upstream improvements.
 - **[bropines/wireproxy-awg](https://github.com/bropines/wireproxy-awg)**: Current maintainer. Added dynamic UDP Proxy Tunnel support, refined build systems, and overall structural improvements.
 
 # Why you might want this
@@ -36,10 +35,6 @@ anything.
 - UDP proxy and forwarding tunnel (`UDPProxyTunnel`)
 - SOCKS5/HTTP proxy (currently only CONNECT is supported)
 - Native AmneziaWG support
-
-# TODO
-
-- UDP Support in SOCKS5
 
 # Usage
 
@@ -321,4 +316,4 @@ The peer which the ICMP ping packet is routed to depends on the `AllowedIPs` set
 
 # Stargazers over time
 
-[![Stargazers over time](https://starchart.cc/bropines/wireproxy-awg.svg)](https://starchart.cc/bropines/wireproxy-awg)
+[![Stargazers over time](https://starchart.cc/bropines/awg-wireproxy.svg)](https://starchart.cc/bropines/awg-wireproxy)
