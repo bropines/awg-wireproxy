@@ -2,33 +2,22 @@ name: Cross compile WireProxy
 
 on:
   workflow_dispatch:
-  create:
   push:
     tags:
       - "v*"
 
 jobs:
   WireProxy:
-
     name: Cross compile WireProxy
-
     runs-on: ubuntu-latest
-
-    env:
-      workdir: ./WireProxy
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@master
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Git clone WireProxy
-        run: |
-          git clone https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/bropines/awg-wireproxy.git ${{ env.workdir }}
-          cp ./.github/wireproxy-releaser.yml ${{ env.workdir }}/.goreleaser.yml
-
-      - name: Set up GoReleaser
+      - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version: "1.26"
@@ -37,16 +26,7 @@ jobs:
         uses: goreleaser/goreleaser-action@v5
         with:
           distribution: goreleaser
-          workdir: ${{ env.workdir }}
           version: latest
-          args: release --clean
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Release binaries
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: wireproxy
-          files: ${{ env.workdir }}/dist/*.tar.gz
+          args: release --clean --config .github/wireproxy-releaser.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
