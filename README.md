@@ -1,7 +1,7 @@
 # wireproxy-awg
 
 [![ISC licensed](https://img.shields.io/badge/license-ISC-blue)](./LICENSE)
-[![Build status](https://github.com/bropines/wireproxy-awg/actions/workflows/build.yml/badge.svg)](https://github.com/bropines/wireproxy-awg/actions)
+[![Build status](https://github.com/bropines/awg-wireproxy/actions/workflows/build.yml/badge.svg)](https://github.com/bropines/wireproxy-awg/actions)
 
 A wireguard and AmneziaWG client that exposes itself as a socks5/http proxy or tunnels.
 
