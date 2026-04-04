@@ -28,6 +28,21 @@ builds:
         goarch: arm
       - goos: windows
         goarch: arm64
+      # Игнорим всё для Android, кроме arm64
+      - goos: android
+        goarch: arm
+      - goos: android
+        goarch: 386
+      - goos: android
+        goarch: amd64
+      - goos: android
+        goarch: mips
+      - goos: android
+        goarch: mipsle
+      - goos: android
+        goarch: s390x
+      - goos: android
+        goarch: riscv64
     main: ./cmd/wireproxy/
     binary: wireproxy
 universal_binaries:
