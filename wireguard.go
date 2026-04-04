@@ -17,7 +17,7 @@ import (
 // DeviceSetting contains the parameters for setting up a tun interface
 type DeviceSetting struct {
 	IpcRequest string
-	DNS        []netip.Addr
+	DNS         []netip.Addr
 	DeviceAddr []netip.Addr
 	MTU        int
 }
@@ -37,53 +37,53 @@ func CreateIPCRequest(conf *DeviceConfig) (*DeviceSetting, error) {
 		var aSecBuilder strings.Builder
 
 		if aSecConfig.hasJunkPacketCount {
-			aSecBuilder.WriteString(fmt.Sprintf("jc=%d\n", aSecConfig.junkPacketCount))
+			fmt.Fprintf(&aSecBuilder, "jc=%d\n", aSecConfig.junkPacketCount)
 		}
 		if aSecConfig.hasJunkPacketMinSize {
-			aSecBuilder.WriteString(fmt.Sprintf("jmin=%d\n", aSecConfig.junkPacketMinSize))
+			fmt.Fprintf(&aSecBuilder, "jmin=%d\n", aSecConfig.junkPacketMinSize)
 		}
 		if aSecConfig.hasJunkPacketMaxSize {
-			aSecBuilder.WriteString(fmt.Sprintf("jmax=%d\n", aSecConfig.junkPacketMaxSize))
+			fmt.Fprintf(&aSecBuilder, "jmax=%d\n", aSecConfig.junkPacketMaxSize)
 		}
 		if aSecConfig.hasInitPacketJunkSize {
-			aSecBuilder.WriteString(fmt.Sprintf("s1=%d\n", aSecConfig.initPacketJunkSize))
+			fmt.Fprintf(&aSecBuilder, "s1=%d\n", aSecConfig.initPacketJunkSize)
 		}
 		if aSecConfig.hasResponsePacketJunkSize {
-			aSecBuilder.WriteString(fmt.Sprintf("s2=%d\n", aSecConfig.responsePacketJunkSize))
+			fmt.Fprintf(&aSecBuilder, "s2=%d\n", aSecConfig.responsePacketJunkSize)
 		}
 		if aSecConfig.hasCookieReplyPacketJunkSize {
-			aSecBuilder.WriteString(fmt.Sprintf("s3=%d\n", aSecConfig.cookieReplyPacketJunkSize))
+			fmt.Fprintf(&aSecBuilder, "s3=%d\n", aSecConfig.cookieReplyPacketJunkSize)
 		}
 		if aSecConfig.hasTransportPacketJunkSize {
-			aSecBuilder.WriteString(fmt.Sprintf("s4=%d\n", aSecConfig.transportPacketJunkSize))
+			fmt.Fprintf(&aSecBuilder, "s4=%d\n", aSecConfig.transportPacketJunkSize)
 		}
 		if aSecConfig.hasInitPacketMagicHeader {
-			aSecBuilder.WriteString(fmt.Sprintf("h1=%s\n", formatMagicHeaderInterval(aSecConfig.initPacketMagicHeader, aSecConfig.initPacketMagicHeaderMax)))
+			fmt.Fprintf(&aSecBuilder, "h1=%s\n", formatMagicHeaderInterval(aSecConfig.initPacketMagicHeader, aSecConfig.initPacketMagicHeaderMax))
 		}
 		if aSecConfig.hasResponsePacketMagicHeader {
-			aSecBuilder.WriteString(fmt.Sprintf("h2=%s\n", formatMagicHeaderInterval(aSecConfig.responsePacketMagicHeader, aSecConfig.responsePacketMagicHeaderMax)))
+			fmt.Fprintf(&aSecBuilder, "h2=%s\n", formatMagicHeaderInterval(aSecConfig.responsePacketMagicHeader, aSecConfig.responsePacketMagicHeaderMax))
 		}
 		if aSecConfig.hasUnderloadPacketMagicHeader {
-			aSecBuilder.WriteString(fmt.Sprintf("h3=%s\n", formatMagicHeaderInterval(aSecConfig.underloadPacketMagicHeader, aSecConfig.underloadPacketMagicHeaderMax)))
+			fmt.Fprintf(&aSecBuilder, "h3=%s\n", formatMagicHeaderInterval(aSecConfig.underloadPacketMagicHeader, aSecConfig.underloadPacketMagicHeaderMax))
 		}
 		if aSecConfig.hasTransportPacketMagicHeader {
-			aSecBuilder.WriteString(fmt.Sprintf("h4=%s\n", formatMagicHeaderInterval(aSecConfig.transportPacketMagicHeader, aSecConfig.transportPacketMagicHeaderMax)))
+			fmt.Fprintf(&aSecBuilder, "h4=%s\n", formatMagicHeaderInterval(aSecConfig.transportPacketMagicHeader, aSecConfig.transportPacketMagicHeaderMax))
 		}
 
 		if aSecConfig.i1 != nil {
-			aSecBuilder.WriteString(fmt.Sprintf("i1=%s\n", *aSecConfig.i1))
+			fmt.Fprintf(&aSecBuilder, "i1=%s\n", *aSecConfig.i1)
 		}
 		if aSecConfig.i2 != nil {
-			aSecBuilder.WriteString(fmt.Sprintf("i2=%s\n", *aSecConfig.i2))
+			fmt.Fprintf(&aSecBuilder, "i2=%s\n", *aSecConfig.i2)
 		}
 		if aSecConfig.i3 != nil {
-			aSecBuilder.WriteString(fmt.Sprintf("i3=%s\n", *aSecConfig.i3))
+			fmt.Fprintf(&aSecBuilder, "i3=%s\n", *aSecConfig.i3)
 		}
 		if aSecConfig.i4 != nil {
-			aSecBuilder.WriteString(fmt.Sprintf("i4=%s\n", *aSecConfig.i4))
+			fmt.Fprintf(&aSecBuilder, "i4=%s\n", *aSecConfig.i4)
 		}
 		if aSecConfig.i5 != nil {
-			aSecBuilder.WriteString(fmt.Sprintf("i5=%s\n", *aSecConfig.i5))
+			fmt.Fprintf(&aSecBuilder, "i5=%s\n", *aSecConfig.i5)
 		}
 
 		request.WriteString(aSecBuilder.String())
