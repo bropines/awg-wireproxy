@@ -23,8 +23,8 @@ To keep things organized, the documentation is split into several modules. Pleas
 - 🦊 **[Use with VPN & Browser Extensions](UseWithVPN.md)** - Setup with Firefox Container Tabs and MacOS auto-start.
 
 **System Services Integrations:**
-- 🐧 [Running with systemd](systemd/README.md)
-- 🧰 [Running with rc.d](rc.d/README.md)
+- 🐧 [Running with systemd](systemd\systemd_docs.md)
+- 🧰 [Running with rc.d](rc.d\rc.d.md)
 
 ## Feature Highlights
 
