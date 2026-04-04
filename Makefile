@@ -26,7 +26,7 @@ help:
 build:
 	@echo "==> Сборка для текущей ОС..."
 	@mkdir -p $(BUILD_DIR)
-	go build $(LDFLAGS) -o $(BUILD_DIR)/$(APP_NAME) $(MAIN_PKG)
+	CGO_ENABLED=0 go build $(LDFLAGS) -o $(BUILD_DIR)/$(APP_NAME) $(MAIN_PKG)
 
 linux:
 	@echo "==> Сборка для Linux..."

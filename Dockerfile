@@ -4,7 +4,7 @@ FROM docker.io/golang:1.26 as build
 WORKDIR /usr/src/wireproxy
 COPY . .
 
-RUN make
+RUN CGO_ENABLED=0 make
 
 # Now copy it into our base image.
 FROM gcr.io/distroless/static-debian11:nonroot
