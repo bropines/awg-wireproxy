@@ -1,5 +1,5 @@
 # Start by building the application.
-FROM docker.io/golang:1.23-alpine AS build
+FROM docker.io/library/golang:1.24-alpine AS build
 
 WORKDIR /usr/src/wireproxy
 COPY . .
