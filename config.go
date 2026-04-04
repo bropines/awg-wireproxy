@@ -31,6 +31,7 @@ type DeviceConfig struct {
 	ListenPort         *int
 	CheckAlive         []netip.Addr
 	CheckAliveInterval int
+	ASecConfig         *ASecConfigType
 }
 
 type UDPProxyTunnelConfig struct {
@@ -311,6 +312,12 @@ func ParseInterface(cfg *ini.File, device *DeviceConfig) error {
 		device.CheckAliveInterval = value
 	}
 
+	aSecConfig, err := ParseASecConfig(section)
+	if err != nil {
+		return err
+	}
+	device.ASecConfig = aSecConfig
+
 	return nil
 }
 
@@ -463,7 +470,7 @@ func parseResolveConfig(section *ini.Section) (*ResolveConfig, error) {
 
 	resolvStrategy, _ := parseString(section, "ResolveStrategy")
 	config.ResolveStrategy = resolvStrategy
-  
+
 	return config, nil
 }
 
@@ -587,9 +594,9 @@ func ParseConfig(path string) (*Configuration, error) {
 		resolve, err = parseResolveConfig(resolveSection)
 		if err != nil {
 			return nil, err
-	  }
-  }
-    
+		}
+	}
+
 	err = parseRoutinesConfig(&routinesSpawners, cfg, "UDPProxyTunnel", parseUDPProxyTunnelConfig)
 	if err != nil {
 		return nil, err

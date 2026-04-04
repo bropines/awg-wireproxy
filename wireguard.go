@@ -3,14 +3,15 @@ package wireproxy
 import (
 	"bytes"
 	"fmt"
+	"strings"
 	"sync"
 
 	"net/netip"
 
 	"github.com/MakeNowJust/heredoc/v2"
-	"golang.zx2c4.com/wireguard/conn"
-	"golang.zx2c4.com/wireguard/device"
-	"golang.zx2c4.com/wireguard/tun/netstack"
+	"github.com/amnezia-vpn/amneziawg-go/conn"
+	"github.com/amnezia-vpn/amneziawg-go/device"
+	"github.com/amnezia-vpn/amneziawg-go/tun/netstack"
 )
 
 // DeviceSetting contains the parameters for setting up a tun interface
@@ -29,6 +30,63 @@ func CreateIPCRequest(conf *DeviceConfig) (*DeviceSetting, error) {
 
 	if conf.ListenPort != nil {
 		fmt.Fprintf(&request, "listen_port=%d\n", *conf.ListenPort)
+	}
+
+	if conf.ASecConfig != nil {
+		aSecConfig := conf.ASecConfig
+		var aSecBuilder strings.Builder
+
+		if aSecConfig.hasJunkPacketCount {
+			aSecBuilder.WriteString(fmt.Sprintf("jc=%d\n", aSecConfig.junkPacketCount))
+		}
+		if aSecConfig.hasJunkPacketMinSize {
+			aSecBuilder.WriteString(fmt.Sprintf("jmin=%d\n", aSecConfig.junkPacketMinSize))
+		}
+		if aSecConfig.hasJunkPacketMaxSize {
+			aSecBuilder.WriteString(fmt.Sprintf("jmax=%d\n", aSecConfig.junkPacketMaxSize))
+		}
+		if aSecConfig.hasInitPacketJunkSize {
+			aSecBuilder.WriteString(fmt.Sprintf("s1=%d\n", aSecConfig.initPacketJunkSize))
+		}
+		if aSecConfig.hasResponsePacketJunkSize {
+			aSecBuilder.WriteString(fmt.Sprintf("s2=%d\n", aSecConfig.responsePacketJunkSize))
+		}
+		if aSecConfig.hasCookieReplyPacketJunkSize {
+			aSecBuilder.WriteString(fmt.Sprintf("s3=%d\n", aSecConfig.cookieReplyPacketJunkSize))
+		}
+		if aSecConfig.hasTransportPacketJunkSize {
+			aSecBuilder.WriteString(fmt.Sprintf("s4=%d\n", aSecConfig.transportPacketJunkSize))
+		}
+		if aSecConfig.hasInitPacketMagicHeader {
+			aSecBuilder.WriteString(fmt.Sprintf("h1=%s\n", formatMagicHeaderInterval(aSecConfig.initPacketMagicHeader, aSecConfig.initPacketMagicHeaderMax)))
+		}
+		if aSecConfig.hasResponsePacketMagicHeader {
+			aSecBuilder.WriteString(fmt.Sprintf("h2=%s\n", formatMagicHeaderInterval(aSecConfig.responsePacketMagicHeader, aSecConfig.responsePacketMagicHeaderMax)))
+		}
+		if aSecConfig.hasUnderloadPacketMagicHeader {
+			aSecBuilder.WriteString(fmt.Sprintf("h3=%s\n", formatMagicHeaderInterval(aSecConfig.underloadPacketMagicHeader, aSecConfig.underloadPacketMagicHeaderMax)))
+		}
+		if aSecConfig.hasTransportPacketMagicHeader {
+			aSecBuilder.WriteString(fmt.Sprintf("h4=%s\n", formatMagicHeaderInterval(aSecConfig.transportPacketMagicHeader, aSecConfig.transportPacketMagicHeaderMax)))
+		}
+
+		if aSecConfig.i1 != nil {
+			aSecBuilder.WriteString(fmt.Sprintf("i1=%s\n", *aSecConfig.i1))
+		}
+		if aSecConfig.i2 != nil {
+			aSecBuilder.WriteString(fmt.Sprintf("i2=%s\n", *aSecConfig.i2))
+		}
+		if aSecConfig.i3 != nil {
+			aSecBuilder.WriteString(fmt.Sprintf("i3=%s\n", *aSecConfig.i3))
+		}
+		if aSecConfig.i4 != nil {
+			aSecBuilder.WriteString(fmt.Sprintf("i4=%s\n", *aSecConfig.i4))
+		}
+		if aSecConfig.i5 != nil {
+			aSecBuilder.WriteString(fmt.Sprintf("i5=%s\n", *aSecConfig.i5))
+		}
+
+		request.WriteString(aSecBuilder.String())
 	}
 
 	for _, peer := range conf.Peers {

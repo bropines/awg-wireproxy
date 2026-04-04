@@ -15,8 +15,8 @@ import (
 	"github.com/landlock-lsm/go-landlock/landlock"
 
 	"github.com/akamensky/argparse"
-	"github.com/windtf/wireproxy"
-	"golang.zx2c4.com/wireguard/device"
+	"github.com/amnezia-vpn/amneziawg-go/device"
+	"github.com/bropines/wireproxy-awg"
 	"suah.dev/protect"
 )
 
