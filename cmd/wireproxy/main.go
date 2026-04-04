@@ -29,7 +29,7 @@ var default_config_paths = []string{
 	os.Getenv("HOME") + "/.config/wireproxy.conf",
 }
 
-var version = "2.0.0-awg-udp"
+var version = "2.0.3-awg-udp"
 
 func panicIfError(err error) {
 	if err != nil {
