@@ -1,47 +1,45 @@
-# wireproxy
+# wireproxy-awg
 
 [![ISC licensed](https://img.shields.io/badge/license-ISC-blue)](./LICENSE)
-[![Build status](https://github.com/octeep/wireproxy/actions/workflows/build.yml/badge.svg)](https://github.com/octeep/wireproxy/actions)
-[![Documentation](https://img.shields.io/badge/godoc-wireproxy-blue)](https://pkg.go.dev/github.com/octeep/wireproxy)
+[![Build status](https://github.com/bropines/wireproxy-awg/actions/workflows/build.yml/badge.svg)](https://github.com/bropines/wireproxy-awg/actions)
 
-A wireguard client that exposes itself as a socks5/http proxy or tunnels.
+A wireguard and AmneziaWG client that exposes itself as a socks5/http proxy or tunnels.
 
 # What is this
 
-`wireproxy` is a completely userspace application that connects to a wireguard peer,
+`wireproxy` is a completely userspace application that connects to a wireguard/AmneziaWG peer,
 and exposes a socks5/http proxy or tunnels on the machine. This can be useful if you need
 to connect to certain sites via a wireguard peer, but can't be bothered to setup a new network
 interface for whatever reasons.
 
+# Credits & Authorship
+
+This project is a heavily modified fork standing on the shoulders of giants:
+- **[octeep/wireproxy](https://github.com/octeep/wireproxy)**: The original creator of wireproxy.
+- **[artem-russkikh/wireproxy-awg](https://github.com/artem-russkikh/wireproxy-awg)**: Added AmneziaWG (AWG) support.
+- **[windtf/wireproxy](https://github.com/windtf/wireproxy)**: Various upstream improvements.
+- **[bropines/wireproxy-awg](https://github.com/bropines/wireproxy-awg)**: Current maintainer. Added dynamic UDP Proxy Tunnel support, refined build systems, and overall structural improvements.
+
 # Why you might want this
 
-- You simply want to use wireguard as a way to proxy some traffic.
+- You simply want to use wireguard/AWG as a way to proxy some traffic.
 - You don't want root permission just to change wireguard settings.
 
-Currently, I'm running wireproxy connected to a wireguard server in another country,
+Currently, I'm running wireproxy connected to a server in another country,
 and configured my browser to use wireproxy for certain sites. It's pretty useful since
 wireproxy is completely isolated from my network interfaces, and I don't need root to configure
 anything.
 
-Users who want something similar but for Amnezia VPN can use [this fork](https://github.com/artem-russkikh/wireproxy-awg)
-of wireproxy by [@artem-russkikh](https://github.com/artem-russkikh).
-
-# Sponsor
-
-This project is supported by [IPRoyal](https://iproyal.com/?r=795836). You can get premium quality proxies at unbeatable prices
-with a discount using [this referral link](https://iproyal.com/?r=795836)! 🚀
-
-![IPRoyal](/assets/iproyal.png)
-
 # Feature
 
 - TCP static routing for client and server
+- UDP proxy and forwarding tunnel (`UDPProxyTunnel`)
 - SOCKS5/HTTP proxy (currently only CONNECT is supported)
+- Native AmneziaWG support
 
 # TODO
 
 - UDP Support in SOCKS5
-- UDP static routing
 
 # Usage
 
@@ -72,15 +70,15 @@ Arguments:
 # Build instruction
 
 ```bash
-git clone https://github.com/octeep/wireproxy
-cd wireproxy
+git clone [https://github.com/bropines/wireproxy-awg](https://github.com/bropines/wireproxy-awg)
+cd wireproxy-awg
 make
 ```
 
 # Install
 
 ```bash
-go install github.com/windtf/wireproxy/cmd/wireproxy@v1.0.9 # or @latest
+go install [github.com/bropines/wireproxy-awg/cmd/wireproxy@latest](https://github.com/bropines/wireproxy-awg/cmd/wireproxy@latest)
 ```
 
 # Use with VPN
@@ -92,14 +90,25 @@ Instructions for using wireproxy with Firefox container tabs and auto-start on M
 ```ini
 # The [Interface] and [Peer] configurations follow the same semantics and meaning
 # of a wg-quick configuration. To understand what these fields mean, please refer to:
-# https://wiki.archlinux.org/title/WireGuard#Persistent_configuration
-# https://www.wireguard.com/#simple-network-interface
+# [https://wiki.archlinux.org/title/WireGuard#Persistent_configuration](https://wiki.archlinux.org/title/WireGuard#Persistent_configuration)
+# [https://www.wireguard.com/#simple-network-interface](https://www.wireguard.com/#simple-network-interface)
 [Interface]
 Address = 10.200.200.2/32 # The subnet should be /32 and /128 for IPv4 and v6 respectively
 # MTU = 1420 (optional)
 PrivateKey = uCTIK+56CPyCvwJxmU5dBfuyJvPuSXAq1FzHdnIxe1Q=
 # PrivateKey = $MY_WIREGUARD_PRIVATE_KEY # Alternatively, reference environment variables
 DNS = 10.200.200.1
+
+# AmneziaWG specific fields are fully supported here
+# Jc = 4
+# Jmin = 50
+# Jmax = 1000
+# S1 = 40
+# S2 = 40
+# H1 = 1
+# H2 = 2
+# H3 = 3
+# H4 = 4
 
 [Peer]
 PublicKey = QP+A67Z2UBrMgvNIdHv8gPel5URWNLS4B3ZQ2hQIZlg=
@@ -122,6 +131,14 @@ Target = play.cubecraft.net:25565
 [TCPServerTunnel]
 ListenPort = 3422
 Target = localhost:25545
+
+# UDPProxyTunnel listens locally and forwards dynamic UDP traffic via wireguard.
+# Flow:
+# <an app on your LAN> --> localhost:53 --(wireguard)--> 1.1.1.1:53
+[UDPProxyTunnel]
+BindAddress = 127.0.0.1:53
+Target = 1.1.1.1:53
+InactivityTimeout = 30 # If its set to 0, it will never timeout
 
 # STDIOTunnel is a tunnel connecting the standard input and output of the wireproxy
 # process to the specified TCP target via wireguard.
@@ -241,9 +258,12 @@ The argument `--info/-i` specifies an address and port (e.g. `localhost:9080`), 
 
 Currently two endpoints are implemented:
 
-`/metrics`: Exposes information of the wireguard daemon, this provides the same information you would get with `wg show`. [This](https://www.wireguard.com/xplatform/#example-dialog) shows an example of what the response would look like.
+`/metrics`: Exposes information of the wireguard daemon, this provides the same information you would get with `wg show`.
+[This](https://www.wireguard.com/xplatform/#example-dialog) shows an example of what the response would look like.
 
-`/readyz`: This responds with a json which shows the last time a pong is received from an IP specified with `CheckAlive`. When `CheckAlive` is set, a ping is sent out to addresses in `CheckAlive` per `CheckAliveInterval` seconds (defaults to 5) via wireguard. If a pong has not been received from one of the addresses within the last `CheckAliveInterval` seconds (+2 seconds for some leeway to account for latency), then it would respond with a 503, otherwise a 200.
+`/readyz`: This responds with a json which shows the last time a pong is received from an IP specified with `CheckAlive`.
+When `CheckAlive` is set, a ping is sent out to addresses in `CheckAlive` per `CheckAliveInterval` seconds (defaults to 5) via wireguard.
+If a pong has not been received from one of the addresses within the last `CheckAliveInterval` seconds (+2 seconds for some leeway to account for latency), then it would respond with a 503, otherwise a 200.
 
 For example:
 
@@ -297,9 +317,8 @@ CheckAlive = 1.1.1.1
 ```
 
 If nothing is set for `CheckAlive`, an empty JSON object with 200 will be the response.
-
 The peer which the ICMP ping packet is routed to depends on the `AllowedIPs` set for each peers.
 
 # Stargazers over time
 
-[![Stargazers over time](https://starchart.cc/octeep/wireproxy.svg)](https://starchart.cc/octeep/wireproxy)
+[![Stargazers over time](https://starchart.cc/bropines/wireproxy-awg.svg)](https://starchart.cc/bropines/wireproxy-awg)

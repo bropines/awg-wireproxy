@@ -8,12 +8,13 @@ RUN make
 
 # Now copy it into our base image.
 FROM gcr.io/distroless/static-debian11:nonroot
-COPY --from=build /usr/src/wireproxy/wireproxy /usr/bin/wireproxy
+COPY --from=build /usr/src/wireproxy/build/wireproxy /usr/bin/wireproxy
 
 VOLUME [ "/etc/wireproxy"]
 ENTRYPOINT [ "/usr/bin/wireproxy" ]
 CMD [ "--config", "/etc/wireproxy/config" ]
 
-LABEL org.opencontainers.image.title="wireproxy"
-LABEL org.opencontainers.image.description="Wireguard client that exposes itself as a socks5 proxy"
+LABEL org.opencontainers.image.title="wireproxy-awg"
+LABEL org.opencontainers.image.description="AmneziaWG/Wireguard client that exposes itself as a socks5/http proxy and UDP/TCP tunnels"
 LABEL org.opencontainers.image.licenses="ISC"
+LABEL org.opencontainers.image.source="https://github.com/bropines/wireproxy-awg"
