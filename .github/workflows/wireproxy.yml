@@ -25,7 +25,7 @@ jobs:
 
       - name: Git clone WireProxy
         run: |
-          git clone https://github.com/bropines/wireproxy-awg.git ${{ env.workdir }}
+          git clone https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/bropines/awg-wireproxy.git ${{ env.workdir }}
           cp ./.github/wireproxy-releaser.yml ${{ env.workdir }}/.goreleaser.yml
 
       - name: Set up GoReleaser
