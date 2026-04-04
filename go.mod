@@ -1,4 +1,4 @@
-module github.com/bropines/wireproxy-awg
+module github.com/bropines/awg-wireproxy
 
 go 1.24.4
 
