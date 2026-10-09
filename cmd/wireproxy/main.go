@@ -198,7 +198,6 @@ func main() {
 	}()
 
 	exePath := executablePath()
-	lock("boot")
 
 	isDaemonProcess := len(os.Args) > 1 && os.Args[1] == daemonProcess
 	args := os.Args
@@ -215,6 +214,8 @@ func main() {
 	info := parser.String("i", "info", &argparse.Options{Help: "Specify the address and port for exposing health status"})
 	printVerison := parser.Flag("v", "version", &argparse.Options{Help: "Print version"})
 	configTest := parser.Flag("n", "configtest", &argparse.Options{Help: "Configtest mode. Only check the configuration file for validity."})
+	adminAddr := parser.String("a", "admin", &argparse.Options{Help: "Enable the web panel on this address (e.g. 127.0.0.1:9090). Env: WIREPROXY_ADMIN. Disables the sandbox"})
+	adminToken := parser.String("t", "admin-token", &argparse.Options{Help: "Access token for the web panel (random if empty). Env: WIREPROXY_ADMIN_TOKEN"})
 
 	err := parser.Parse(args)
 	if err != nil {
@@ -227,13 +228,45 @@ func main() {
 		return
 	}
 
+	if *adminAddr == "" {
+		*adminAddr = os.Getenv("WIREPROXY_ADMIN")
+	}
+	if *adminToken == "" {
+		*adminToken = os.Getenv("WIREPROXY_ADMIN_TOKEN")
+	}
+	adminMode := *adminAddr != "" && !*configTest
+	if adminMode && *daemon {
+		fmt.Println("--admin cannot be combined with --daemon; use a service manager or Docker instead")
+		return
+	}
+
+	// The web panel has to write the config file and restart the process,
+	// which the sandbox would forbid.
+	if !adminMode {
+		lock("boot")
+	}
+
 	if *config == "" {
 		if path, config_exist := configFilePath(); config_exist {
 			*config = path
+		} else if adminMode {
+			*config = default_config_paths[0]
 		} else {
 			fmt.Println("configuration path is required")
 			return
 		}
+	}
+
+	if adminMode {
+		os.Stdout = os.Stderr
+		runAdmin(ctx, adminOptions{
+			configPath: *config,
+			addr:       *adminAddr,
+			token:      *adminToken,
+			silent:     *silent,
+			infoAddr:   *info,
+		})
+		return
 	}
 
 	if !*daemon {

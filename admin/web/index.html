@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>awg-wireproxy</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main id="login" class="card login" hidden>
+    <h1>awg-wireproxy</h1>
+    <p class="muted">Enter the admin token printed in the daemon log or set via <code>--admin-token</code>.</p>
+    <form id="login-form">
+      <input id="token" type="password" autocomplete="current-password" placeholder="Admin token" required autofocus>
+      <button class="primary" type="submit">Sign in</button>
+    </form>
+    <p id="login-error" class="msg error" role="alert"></p>
+  </main>
+
+  <div id="app" hidden>
+    <header>
+      <div class="brand">
+        <strong>awg-wireproxy</strong>
+        <span id="version" class="muted"></span>
+      </div>
+      <div class="header-right">
+        <span id="state" class="pill">…</span>
+        <button id="logout" class="ghost">Sign out</button>
+      </div>
+    </header>
+
+    <nav role="tablist">
+      <button role="tab" data-tab="status" class="active">Status</button>
+      <button role="tab" data-tab="config">Config</button>
+      <button role="tab" data-tab="logs">Logs</button>
+    </nav>
+
+    <section id="tab-status">
+      <div id="start-error" class="card error-card" hidden>
+        <strong>The tunnel is not running.</strong>
+        <pre id="start-error-text"></pre>
+        <p class="muted">Fix the configuration on the Config tab, or go back to the last saved version.</p>
+        <button id="restore" class="danger">Restore previous config and restart</button>
+      </div>
+
+      <div class="grid">
+        <div class="card"><div class="muted">Uptime</div><div id="uptime" class="big">–</div></div>
+        <div class="card"><div class="muted">Config</div><div id="cfgpath" class="mono small">–</div></div>
+      </div>
+
+      <h2>Peers</h2>
+      <div class="card table-wrap">
+        <table>
+          <thead><tr><th>Peer</th><th>Endpoint</th><th>Last handshake</th><th>Received</th><th>Sent</th></tr></thead>
+          <tbody id="peers"><tr><td colspan="5" class="muted">No data yet</td></tr></tbody>
+        </table>
+      </div>
+
+      <h2>Listeners</h2>
+      <div class="card"><ul id="listeners" class="plain"></ul></div>
+
+      <div class="actions">
+        <button id="reload">Restart with current config</button>
+      </div>
+    </section>
+
+    <section id="tab-config" hidden>
+      <div class="toolbar">
+        <label class="check"><input type="checkbox" id="reveal"> Show secrets</label>
+        <span class="spacer"></span>
+        <button id="gen-key" title="Insert a random 32-byte key as HeaderProtectionKey">Generate key</button>
+        <button id="template" title="Insert an AmneziaWG parameter template">AWG template</button>
+        <button id="validate">Validate</button>
+        <button id="save">Save</button>
+        <button id="apply" class="primary">Save &amp; apply</button>
+      </div>
+      <textarea id="editor" spellcheck="false" autocapitalize="off" autocomplete="off" wrap="off"></textarea>
+      <p id="config-msg" class="msg" role="status"></p>
+      <p class="muted small">Secret values are hidden as <code>********</code>; leave them as they are to keep the stored value.
+        The previous file is kept as <code>.bak</code>. Applying restarts the daemon (a second or two of downtime).</p>
+    </section>
+
+    <section id="tab-logs" hidden>
+      <div class="toolbar">
+        <label class="check"><input type="checkbox" id="follow" checked> Follow</label>
+        <span class="spacer"></span>
+        <button id="clear-logs">Clear view</button>
+      </div>
+      <pre id="log" class="log"></pre>
+      <p class="muted small">Nothing here? The daemon may be running with <code>--silent</code>.</p>
+    </section>
+  </div>
+
+  <div id="overlay" hidden><div class="card"><div class="spinner"></div><p id="overlay-text">Restarting…</p></div></div>
+  <script src="app.js"></script>
+</body>
+</html>
