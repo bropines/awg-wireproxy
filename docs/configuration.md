@@ -14,7 +14,8 @@ PrivateKey = uCTIK+56CPyCvwJxmU5dBfuyJvPuSXAq1FzHdnIxe1Q=
 # PrivateKey = $MY_WIREGUARD_PRIVATE_KEY # Alternatively, reference environment variables
 DNS = 10.200.200.1
 
-# AmneziaWG specific fields are fully supported here
+# AmneziaWG fields (Jc, S1-S4, H1-H4, I1-I5 and the AWG 3.x options) go here too,
+# see amneziawg.md for the full list.
 # Jc = 4
 # Jmin = 50
 # Jmax = 1000
@@ -62,6 +63,8 @@ Target = ssh.myserver.net:22
 BindAddress = 127.0.0.1:25344
 #Username = ...
 #Password = ...
+# Route only matching domains through wireguard, see "Domain routing" below.
+#TunnelDomains = ^(.*\.)?example\.com$
 
 # http creates a http proxy on your LAN
 [http]
@@ -70,7 +73,36 @@ BindAddress = 127.0.0.1:25345
 #Password = ...
 #CertFile = ...
 #KeyFile = ...
+
+# SNI creates a transparent TLS proxy: the destination is taken from the TLS
+# Server Name Indication and the connection is routed via wireguard.
+[SNI]
+BindAddress = 0.0.0.0:443
 ```
+
+## AmneziaWG
+
+Every AmneziaWG option (1.0 to 3.x) is written in `[Interface]`; see the [AmneziaWG parameters](amneziawg.md).
+
+## Domain routing (`TunnelDomains`)
+
+`[Socks5]`, `[http]` and `[SNI]` can send only some destinations through wireguard and dial everything else
+directly over your normal network:
+
+```ini
+[Socks5]
+BindAddress = 127.0.0.1:25344
+# Each TunnelDomains line is one full Go (RE2) regular expression. Repeat the key for several patterns;
+# do NOT comma-separate (quantifiers like {2,4} keep working). Matching is case-insensitive and a
+# trailing dot is ignored. Without TunnelDomains everything is routed through wireguard (default).
+TunnelDomains = ^(.*\.)?example\.com$
+TunnelDomains = ^ipinfo\.io$
+# Log every connection's destination and whether it went to the TUNNEL or DIRECT. Useful to discover
+# which domains your apps reach before writing TunnelDomains.
+LogDomains = true
+```
+
+For `[SNI]` the patterns are matched against the TLS SNI host name.
 
 ## Importing Existing WG Config
 
@@ -117,3 +149,8 @@ ResolveStrategy = auto
 ```
 
 Wireproxy can also allow peers to connect to it (act as a server) by specifying `ListenPort` in `[Interface]` and omitting `Endpoint` in `[Peer]`.
+
+## Managing the config from the browser
+
+Start wireproxy with `--admin 127.0.0.1:9090` to get a [web panel](admin-panel.md) that edits and validates this file
+and restarts the daemon for you.
