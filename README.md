@@ -13,6 +13,12 @@ and exposes a socks5/http proxy or tunnels on the machine. This can be useful if
 to connect to certain sites via a wireguard peer, but can't be bothered to setup a new network
 interface for whatever reasons.
 
+# Main Sponsor
+
+<a href="https://www.rapidproxy.io/?ref=wire"><img src="./assets/rapidproxy.png" width="300" alt="Rapidproxy"></a>
+
+[RapidProxy](https://www.rapidproxy.io/?ref=wire) is a residential proxy platform with 90M+ real IPs across 200+ countries. It supports rotation, geo-targeting, and high concurrency to improve scraping success and reduce bans. Start your free trial today!
+
 # Why you might want this
 
 - You simply want to use wireguard as a way to proxy some traffic.
@@ -26,17 +32,11 @@ anything.
 Users who want something similar but for Amnezia VPN can use [this fork](https://github.com/artem-russkikh/wireproxy-awg)
 of wireproxy by [@artem-russkikh](https://github.com/artem-russkikh).
 
-# Sponsor
-
-This project is supported by [IPRoyal](https://iproyal.com/?r=795836). You can get premium quality proxies at unbeatable prices
-with a discount using [this referral link](https://iproyal.com/?r=795836)! 🚀
-
-![IPRoyal](/assets/iproyal.png)
-
 # Feature
 
 - TCP static routing for client and server
 - SOCKS5/HTTP proxy (currently only CONNECT is supported)
+- Transparent TLS ([SNI](https://en.wikipedia.org/wiki/Server_Name_Indication)) proxy
 
 # TODO
 
@@ -80,7 +80,7 @@ make
 # Install
 
 ```bash
-go install github.com/windtf/wireproxy/cmd/wireproxy@v1.0.9 # or @latest
+go install github.com/windtf/wireproxy/cmd/wireproxy@v1.1.2 # or @latest
 ```
 
 # Use with VPN
@@ -143,6 +143,20 @@ BindAddress = 127.0.0.1:25344
 # Avoid using spaces in the password field
 #Password = ...
 
+# Domain whitelist routing (optional). When TunnelDomains is set, only connections
+# whose destination host matches one of the patterns are routed through wireguard;
+# every other connection is dialed directly over your normal network. When
+# TunnelDomains is unset, all traffic is routed through wireguard (default).
+# Each TunnelDomains line is a single, full Go regular expression (RE2). Repeat
+# the key for multiple patterns; do NOT comma-separate (so quantifiers like {2,4}
+# keep working). Matching is case-insensitive and a trailing dot is ignored.
+#TunnelDomains = ^(.*\.)?example\.com$
+#TunnelDomains = ^ipinfo\.io$
+# Set LogDomains = true to log every connection's destination host and whether it
+# was routed to the TUNNEL or DIRECT. Useful for discovering which domains your
+# apps reach before writing TunnelDomains. Off by default.
+#LogDomains = true
+
 # http creates a http proxy on your LAN, and all traffic would be routed via wireguard.
 [http]
 BindAddress = 127.0.0.1:25345
@@ -156,6 +170,19 @@ BindAddress = 127.0.0.1:25345
 # Specifying certificate and key enables HTTPS
 #CertFile = ...
 #KeyFile = ...
+
+# TunnelDomains / LogDomains work here too (same semantics as [Socks5] above).
+#TunnelDomains = ^(.*\.)?example\.com$
+#LogDomains = true
+
+# SNI creates a transparent TLS proxy on your LAN, and all traffic would be routed via wireguard,
+# using Server Name Indication as routing destination.
+[SNI]
+BindAddress = 0.0.0.0:443
+
+# TunnelDomains / LogDomains work here too, matched against the TLS SNI hostname.
+#TunnelDomains = ^(.*\.)?example\.com$
+#LogDomains = true
 ```
 
 Alternatively, if you already have a wireguard config, you can import it in the
@@ -300,6 +327,10 @@ If nothing is set for `CheckAlive`, an empty JSON object with 200 will be the re
 
 The peer which the ICMP ping packet is routed to depends on the `AllowedIPs` set for each peers.
 
-# Stargazers over time
-
-[![Stargazers over time](https://starchart.cc/octeep/wireproxy.svg)](https://starchart.cc/octeep/wireproxy)
+# Secondary sponsors 
+<p>This project is supported by the DigitalOcean Open Source Credits Program:</p>
+<p>
+  <a href="https://www.digitalocean.com/">
+    <img src="https://opensource.nyc3.cdn.digitaloceanspaces.com/attribution/assets/SVG/DO_Logo_horizontal_blue.svg" width="201px">
+  </a>
+</p>
