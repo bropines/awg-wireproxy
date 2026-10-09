@@ -1,9 +1,12 @@
 # awg-wireproxy
 
 [![Test](https://github.com/bropines/awg-wireproxy/actions/workflows/test.yml/badge.svg)](https://github.com/bropines/awg-wireproxy/actions/workflows/test.yml)
-[![Release](https://img.shields.io/github/v/release/bropines/awg-wireproxy?include_prereleases)](https://github.com/bropines/awg-wireproxy/releases)
-[![Docker](https://img.shields.io/badge/ghcr.io-awg--wireproxy-blue?logo=docker)](https://github.com/bropines/awg-wireproxy/pkgs/container/awg-wireproxy)
-[![ISC licensed](https://img.shields.io/badge/license-ISC-blue)](./LICENSE)
+[![Lint](https://github.com/bropines/awg-wireproxy/actions/workflows/golangci-lint.yml/badge.svg)](https://github.com/bropines/awg-wireproxy/actions/workflows/golangci-lint.yml)
+[![Release](https://img.shields.io/github/v/release/bropines/awg-wireproxy?include_prereleases&sort=semver)](https://github.com/bropines/awg-wireproxy/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/bropines/awg-wireproxy/total)](https://github.com/bropines/awg-wireproxy/releases)
+[![Go version](https://img.shields.io/github/go-mod/go-version/bropines/awg-wireproxy)](go.mod)
+[![Docker image](https://img.shields.io/badge/ghcr.io-awg--wireproxy-2496ED?logo=docker&logoColor=white)](https://github.com/bropines/awg-wireproxy/pkgs/container/awg-wireproxy)
+[![ISC licensed](https://img.shields.io/github/license/bropines/awg-wireproxy)](./LICENSE)
 
 A WireGuard **and AmneziaWG** client that exposes itself as a socks5/http proxy or tunnels - completely in
 userspace, no root, no network interface.
@@ -92,7 +95,3 @@ This project is a heavily modified fork standing on the shoulders of giants:
 - **[artem-russkikh/wireproxy-awg](https://github.com/artem-russkikh/wireproxy-awg)**: added AmneziaWG (AWG) support.
 - **[amnezia-vpn/amneziawg-go](https://github.com/amnezia-vpn/amneziawg-go)**: the AmneziaWG userspace implementation.
 - **[bropines](https://github.com/bropines)**: current maintainer - UDP proxy tunnel, AWG 1.5-3.x support, web panel, build and release tooling.
-
-## Stargazers over time
-
-[![Stargazers over time](https://starchart.cc/bropines/awg-wireproxy.svg)](https://starchart.cc/bropines/awg-wireproxy)
