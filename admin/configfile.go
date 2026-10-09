@@ -34,9 +34,9 @@ func validateConfig(path, text string) error {
 	if err != nil {
 		return fmt.Errorf("cannot create a temporary file next to the config: %w", err)
 	}
-	defer os.Remove(tmp.Name())
+	defer func() { _ = os.Remove(tmp.Name()) }()
 	if _, err := tmp.WriteString(text); err != nil {
-		tmp.Close()
+		_ = tmp.Close()
 		return err
 	}
 	if err := tmp.Close(); err != nil {
@@ -82,7 +82,7 @@ func writeConfig(path, text string) error {
 				}
 			}
 		}
-		os.Remove(tmpName)
+		_ = os.Remove(tmpName)
 	}
 
 	// Fallback for setups where rename is impossible (e.g. a single file

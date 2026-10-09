@@ -83,8 +83,8 @@ func TestParsePeers(t *testing.T) {
 
 func TestLogBuffer(t *testing.T) {
 	b := NewLogBuffer(3)
-	b.Write([]byte("one\ntwo\nthr"))
-	b.Write([]byte("ee\nfour\n"))
+	_, _ = b.Write([]byte("one\ntwo\nthr"))
+	_, _ = b.Write([]byte("ee\nfour\n"))
 	lines, next := b.Since(0)
 	if len(lines) != 3 || lines[0].Text != "two" || lines[2].Text != "four" || next != 4 {
 		t.Fatalf("got %+v next=%d", lines, next)
@@ -125,7 +125,7 @@ func do(t *testing.T, method, url, token string, body any) (int, map[string]any)
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	var out map[string]any
 	_ = json.NewDecoder(resp.Body).Decode(&out)
 	return resp.StatusCode, out

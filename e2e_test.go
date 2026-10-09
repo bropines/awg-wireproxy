@@ -39,7 +39,7 @@ func freePort(t *testing.T) int {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer l.Close()
+	defer func() { _ = l.Close() }()
 	return l.Addr().(*net.TCPAddr).Port
 }
 
@@ -49,7 +49,7 @@ func freeUDPPort(t *testing.T) int {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer c.Close()
+	defer func() { _ = c.Close() }()
 	return c.LocalAddr().(*net.UDPAddr).Port
 }
 
@@ -80,7 +80,7 @@ func startFromConfig(t *testing.T, text string) *VirtualTun {
 func awgTunnelRoundTrip(t *testing.T, awgParams string) {
 	t.Helper()
 	backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, "through-the-tunnel")
+		_, _ = fmt.Fprint(w, "through-the-tunnel")
 	}))
 	t.Cleanup(backend.Close)
 
@@ -124,7 +124,7 @@ BindAddress = 127.0.0.1:%d
 	}
 	client := &http.Client{
 		Timeout:   5 * time.Second,
-		Transport: &http.Transport{Dial: dialer.Dial, DisableKeepAlives: true},
+		Transport: &http.Transport{DialContext: dialer.(proxy.ContextDialer).DialContext, DisableKeepAlives: true},
 	}
 
 	var lastErr error
@@ -133,7 +133,7 @@ BindAddress = 127.0.0.1:%d
 		resp, err := client.Get(fmt.Sprintf("http://10.77.0.1:%d/", tunnelPort))
 		if err == nil {
 			body, _ := io.ReadAll(resp.Body)
-			resp.Body.Close()
+			_ = resp.Body.Close()
 			if string(body) == "through-the-tunnel" {
 				return
 			}
