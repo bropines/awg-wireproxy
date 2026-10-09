@@ -1,0 +1,79 @@
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+version: 2
+project_name: awg-wireproxy
+
+builds:
+  - id: wireproxy
+    main: ./cmd/wireproxy
+    binary: wireproxy
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w -X main.version={{ .Version }}
+    goos: [linux, windows, darwin, freebsd]
+    goarch: [amd64, arm64, arm, "386", mips, mipsle, riscv64, s390x, ppc64le]
+    goarm: ["6", "7"]
+    gomips: [softfloat]
+    ignore:
+      - { goos: windows, goarch: arm }
+      - { goos: windows, goarch: mips }
+      - { goos: windows, goarch: mipsle }
+      - { goos: windows, goarch: riscv64 }
+      - { goos: windows, goarch: s390x }
+      - { goos: windows, goarch: ppc64le }
+      - { goos: darwin, goarch: arm }
+      - { goos: darwin, goarch: "386" }
+      - { goos: darwin, goarch: mips }
+      - { goos: darwin, goarch: mipsle }
+      - { goos: darwin, goarch: riscv64 }
+      - { goos: darwin, goarch: s390x }
+      - { goos: darwin, goarch: ppc64le }
+      - { goos: freebsd, goarch: arm }
+      - { goos: freebsd, goarch: "386" }
+      - { goos: freebsd, goarch: mips }
+      - { goos: freebsd, goarch: mipsle }
+      - { goos: freebsd, goarch: riscv64 }
+      - { goos: freebsd, goarch: s390x }
+      - { goos: freebsd, goarch: ppc64le }
+
+archives:
+  - id: default
+    ids: [wireproxy]
+    formats: [tar.gz]
+    format_overrides:
+      - { goos: windows, formats: [zip] }
+    name_template: >-
+      {{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ with .Arm }}v{{ . }}{{ end }}{{ with .Mips }}_{{ . }}{{ end }}
+    files:
+      - LICENSE
+      - README.md
+      - examples/*
+      - src: systemd/*
+        dst: systemd
+        strip_parent: true
+
+checksum:
+  name_template: checksums.txt
+
+changelog:
+  use: github
+  sort: asc
+  filters:
+    exclude:
+      - "^docs?:"
+      - "^test:"
+      - "^ci:"
+      - "Merge (pull request|branch)"
+
+release:
+  prerelease: auto
+  footer: |
+    ## Docker
+
+    ```bash
+    docker pull ghcr.io/bropines/awg-wireproxy:{{ .Version }}
+    ```
+
+    Verify downloads with `checksums.txt`.

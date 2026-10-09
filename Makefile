@@ -5,9 +5,11 @@ MAIN_PKG = ./cmd/wireproxy
 
 # Флаги линковщика: -s и -w вырезают отладочную информацию (debug symbols), 
 # что сильно уменьшает размер итоговых бинарников.
-LDFLAGS = -ldflags="-s -w"
+# Версия вшивается в бинарник (wireproxy --version)
+VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
+LDFLAGS = -ldflags="-s -w -X main.version=$(VERSION)"
 
-.PHONY: all clean build build-all linux windows darwin android-bin aar help
+.PHONY: all clean build build-all linux windows darwin android-bin aar help test
 
 # Действие по умолчанию (просто make)
 all: clean build
@@ -21,7 +23,12 @@ help:
 	@echo "  make darwin      - собрать только для macOS (amd64, arm64)"
 	@echo "  make android-bin - собрать консольный бинарник для Android (arm64)"
 	@echo "  make aar         - собрать Android библиотеку (.aar) через gomobile"
+	@echo "  make test        - go vet + go test -race (включая интеграционные тесты туннеля)"
 	@echo "  make clean       - удалить папку $(BUILD_DIR)"
+
+test:
+	go vet ./...
+	go test -race -count=1 ./...
 
 build:
 	@echo "==> Сборка для текущей ОС..."

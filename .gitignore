@@ -2,6 +2,6 @@
 /wireproxy
 *.sw?
 /.idea
-.goreleaser.yml
 *.conf
 /build
+/dist

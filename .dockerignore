@@ -1,6 +1,8 @@
-.dockerignore
+.git
 .github
 .gitignore
 Dockerfile
-LICENSE
-README.md
+*.md
+build
+docker-compose.yml
+*.conf

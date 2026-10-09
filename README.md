@@ -37,51 +37,105 @@ of wireproxy by [@artem-russkikh](https://github.com/artem-russkikh).
 - TCP static routing for client and server
 - SOCKS5/HTTP proxy (currently only CONNECT is supported)
 - Transparent TLS ([SNI](https://en.wikipedia.org/wiki/Server_Name_Indication)) proxy
+- Optional [web panel](#web-panel): status, config editor with validation, live logs, restart
 
 # TODO
 
 - UDP Support in SOCKS5
 - UDP static routing
 
-# Usage
-
-```bash
-./wireproxy [-c path to config]
-```
-
-```bash
-usage: wireproxy [-h|--help] [-c|--config "<value>"] [-s|--silent]
-                 [-d|--daemon] [-i|--info "<value>"] [-v|--version]
-                 [-n|--configtest]
-
-                 Userspace wireguard client for proxying
-
-Arguments:
-
-  -h  --help        Print help information
-  -c  --config      Path of configuration file
-                    Default paths: /etc/wireproxy/wireproxy.conf, $HOME/.config/wireproxy.conf
-  -s  --silent      Silent mode
-  -d  --daemon      Make wireproxy run in background
-  -i  --info        Specify the address and port for exposing health status
-  -v  --version     Print version
-  -n  --configtest  Configtest mode. Only check the configuration file for
-                    validity.
-```
-
-# Build instruction
-
-```bash
-git clone https://github.com/bropines/awg-wireproxy
-cd awg-wireproxy
-make        # binary: build/wireproxy
-```
-
 # Install
+
+**Prebuilt binaries** for Linux (amd64, arm64, armv6/v7, 386, mips, mipsle, riscv64, s390x, ppc64le),
+Windows (amd64, arm64, 386), macOS (Intel, Apple Silicon) and FreeBSD are attached to every
+[release](https://github.com/bropines/awg-wireproxy/releases), together with `checksums.txt`.
+
+```bash
+tar xzf awg-wireproxy_<version>_linux_amd64.tar.gz
+./wireproxy --version
+```
+
+**Docker** (multi-arch: amd64, arm64, arm/v7, ppc64le, s390x):
+
+```bash
+docker run -d --name wireproxy --restart unless-stopped \
+  -v "$PWD/config:/etc/wireproxy:ro" \
+  -p 127.0.0.1:25344:25344 \
+  ghcr.io/bropines/awg-wireproxy:latest
+```
+
+`config/config` is your wireproxy config (see [examples/awg.conf.example](examples/awg.conf.example)); inside a
+container bind the proxies to `0.0.0.0` and publish the ports. A ready-to-use [docker-compose.yml](docker-compose.yml)
+(with the web panel) is included. Tags: `latest`, `X.Y.Z`, `X.Y`, and `edge` (latest master build).
+
+**From source:**
 
 ```bash
 go install github.com/bropines/awg-wireproxy/cmd/wireproxy@latest
+# or
+git clone https://github.com/bropines/awg-wireproxy && cd awg-wireproxy
+make          # binary: build/wireproxy      (make test runs vet + tests)
 ```
+
+# Usage
+
+```bash
+./wireproxy -c /path/to/config
+```
+
+```text
+usage: wireproxy [-h|--help] [-c|--config "<value>"] [-s|--silent]
+                 [-d|--daemon] [-i|--info "<value>"] [-v|--version]
+                 [-n|--configtest] [-a|--admin "<value>"] [-t|--admin-token
+                 "<value>"]
+
+Arguments:
+
+  -h  --help         Print help information
+  -c  --config       Path of configuration file
+                     Default paths: /etc/wireproxy/wireproxy.conf, $HOME/.config/wireproxy.conf
+  -s  --silent       Silent mode
+  -d  --daemon       Make wireproxy run in background
+  -i  --info         Specify the address and port for exposing health status
+  -v  --version      Print version
+  -n  --configtest   Configtest mode. Only check the configuration file for validity.
+  -a  --admin        Enable the web panel on this address (e.g. 127.0.0.1:9090).
+                     Env: WIREPROXY_ADMIN. Disables the sandbox
+  -t  --admin-token  Access token for the web panel (random if empty).
+                     Env: WIREPROXY_ADMIN_TOKEN
+```
+
+# Web panel
+
+```bash
+wireproxy -c /etc/wireproxy/config --admin 127.0.0.1:9090 --admin-token "$(openssl rand -hex 24)"
+```
+
+Open `http://127.0.0.1:9090` and sign in with the token (if you omit `--admin-token`, a random one is generated and
+printed to the log on start). The panel is a single embedded page, no extra files or internet access needed.
+
+- **Status** - tunnel state, uptime, every peer's endpoint, last handshake and traffic, and the active listeners.
+- **Config** - edit the config file in the browser. `PrivateKey`, `PresharedKey`, `HeaderProtectionKey` and
+  proxy `Password` values are shown as `********` (tick *Show secrets* to see them); leaving the placeholder keeps the
+  stored value. *Validate* parses the text exactly like the daemon does, *Save* writes it atomically and keeps the
+  previous file as `<config>.bak`, *Save & apply* also restarts the daemon. There are helpers to insert an AmneziaWG
+  parameter template and to generate a `HeaderProtectionKey`.
+- **Logs** - live tail of the daemon log (empty with `--silent`).
+
+Applying a config restarts the process in place (about a second of downtime; the same PID on Linux/macOS).
+`kill -HUP <pid>` does the same from a shell. If the new config does not start, the panel stays up, shows the error
+and offers *Restore previous config*.
+
+The same API is available for scripting with `Authorization: Bearer <token>`:
+`GET /api/status`, `GET|PUT /api/config`, `POST /api/validate`, `POST /api/reload`, `GET /api/logs`,
+and `GET /healthz` (no auth, for health checks).
+
+**Security notes.** The panel can read and replace your private keys, so treat the token like a password.
+It speaks plain HTTP: keep it on `127.0.0.1` or put it behind a TLS reverse proxy (the daemon warns when the
+address is reachable from the network). Login attempts are rate limited, sessions use `HttpOnly`/`SameSite=Strict`
+cookies and a strict Content-Security-Policy. Because the process must write the config and restart itself, `--admin`
+turns off the landlock/pledge sandbox that plain mode applies. `--admin` cannot be combined with `--daemon`.
+In Docker the config directory must be writable by the container user (`sudo chown -R 65532:65532 config`).
 
 # AmneziaWG
 

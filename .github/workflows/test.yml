@@ -1,41 +1,24 @@
 name: Test
 on:
   push:
-    branches:
-      - '**'
+    branches: ['**']
   pull_request:
-    branches:
-      - '**'
   workflow_dispatch:
 
 jobs:
   test:
-    name: Test wireproxy
+    name: go vet + go test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Setting up Go
-        uses: actions/setup-go@v5
+      - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
-      - name: Install dependencies
-        run: sudo apt install wireguard curl
-      - name: Building wireproxy
-        run: |
-          git tag dev
-          make
-      - name: Generate test config
-        run: ./test_config.sh
-      - name: Start wireproxy
-        run: ./wireproxy -c test.conf & sleep 1
-      - name: Test socks5
-        run: curl --proxy socks5://localhost:64423 http://zx2c4.com/ip | grep -q "demo.wireguard.com"
-      - name: Test http
-        run: curl --proxy http://localhost:64424 http://zx2c4.com/ip | grep -q "demo.wireguard.com"
-      - name: Test http with password
-        run: curl --proxy http://peter:hunter123@localhost:64424 http://zx2c4.com/ip | grep -q "demo.wireguard.com"
-      - name: Test http with wrong password
-        run: |
-          set +e
-          curl -s --fail --proxy http://peter:wrongpass@localhost:64425 http://zx2c4.com/ip
-          if [[ $? == 0 ]]; then exit 1; fi
+      - name: Vet
+        run: go vet ./...
+      - name: Test (includes loopback WireGuard / AmneziaWG tunnel tests)
+        run: go test -race -count=1 ./...
+      - name: Build
+        run: make build
+      - name: Config test of the example
+        run: ./build/wireproxy -n -c examples/awg.conf.example

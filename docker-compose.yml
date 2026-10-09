@@ -1,0 +1,18 @@
+# docker compose up -d
+# 1. mkdir config && cp examples/awg.conf.example config/config   (or create it later in the panel)
+# 2. sudo chown -R 65532:65532 config                             (the image runs as a non-root user)
+# 3. echo "ADMIN_TOKEN=$(openssl rand -hex 24)" > .env
+# Then open http://127.0.0.1:9090 and sign in with the token.
+services:
+  wireproxy:
+    image: ghcr.io/bropines/awg-wireproxy:latest
+    restart: unless-stopped
+    environment:
+      WIREPROXY_ADMIN: 0.0.0.0:9090            # remove both lines to run without the web panel
+      WIREPROXY_ADMIN_TOKEN: ${ADMIN_TOKEN:?set ADMIN_TOKEN in .env}
+    ports:
+      - "127.0.0.1:9090:9090"     # web panel (keep it on localhost or behind a TLS reverse proxy)
+      - "127.0.0.1:25344:25344"   # SOCKS5
+      - "127.0.0.1:25345:25345"   # HTTP
+    volumes:
+      - ./config:/etc/wireproxy
