@@ -1,23 +1,22 @@
-# wireproxy
+# awg-wireproxy
 
-[![ISC licensed](https://img.shields.io/badge/license-ISC-blue)](./LICENSE)
-[![Build status](https://github.com/octeep/wireproxy/actions/workflows/build.yml/badge.svg)](https://github.com/octeep/wireproxy/actions)
-[![Documentation](https://img.shields.io/badge/godoc-wireproxy-blue)](https://pkg.go.dev/github.com/octeep/wireproxy)
+[![MIT/ISC licensed](https://img.shields.io/badge/license-ISC-blue)](./LICENSE)
+[![Build status](https://github.com/bropines/awg-wireproxy/actions/workflows/build.yml/badge.svg)](https://github.com/bropines/awg-wireproxy/actions)
 
-A wireguard client that exposes itself as a socks5/http proxy or tunnels.
+A WireGuard **and AmneziaWG** client that exposes itself as a socks5/http proxy or tunnels.
+
+This is a fork of [windtf/wireproxy](https://github.com/windtf/wireproxy) whose core is
+[amneziawg-go](https://github.com/amnezia-vpn/amneziawg-go) **v3.1** instead of wireguard-go.
+It stays in sync with upstream (SNI proxy, domain routing, UDP, health endpoints) and adds full
+AmneziaWG support: AWG 1.0, 1.5 (`I1`-`I5`), 2.0 (`S3`/`S4`, `H1`-`H4` ranges) and 3.x
+(header protection, content padding, custom timings). A plain WireGuard config works unchanged.
 
 # What is this
 
-`wireproxy` is a completely userspace application that connects to a wireguard peer,
+`wireproxy` is a completely userspace application that connects to a wireguard (or AmneziaWG) peer,
 and exposes a socks5/http proxy or tunnels on the machine. This can be useful if you need
 to connect to certain sites via a wireguard peer, but can't be bothered to setup a new network
 interface for whatever reasons.
-
-# Main Sponsor
-
-<a href="https://www.rapidproxy.io/?ref=wire"><img src="./assets/rapidproxy.png" width="300" alt="Rapidproxy"></a>
-
-[RapidProxy](https://www.rapidproxy.io/?ref=wire) is a residential proxy platform with 90M+ real IPs across 200+ countries. It supports rotation, geo-targeting, and high concurrency to improve scraping success and reduce bans. Start your free trial today!
 
 # Why you might want this
 
@@ -34,6 +33,7 @@ of wireproxy by [@artem-russkikh](https://github.com/artem-russkikh).
 
 # Feature
 
+- WireGuard and AmneziaWG (1.0 - 3.x) with all obfuscation parameters
 - TCP static routing for client and server
 - SOCKS5/HTTP proxy (currently only CONNECT is supported)
 - Transparent TLS ([SNI](https://en.wikipedia.org/wiki/Server_Name_Indication)) proxy
@@ -72,16 +72,82 @@ Arguments:
 # Build instruction
 
 ```bash
-git clone https://github.com/octeep/wireproxy
-cd wireproxy
-make
+git clone https://github.com/bropines/awg-wireproxy
+cd awg-wireproxy
+make        # binary: build/wireproxy
 ```
 
 # Install
 
 ```bash
-go install github.com/windtf/wireproxy/cmd/wireproxy@v1.1.2 # or @latest
+go install github.com/bropines/awg-wireproxy/cmd/wireproxy@latest
 ```
+
+# AmneziaWG
+
+Put the AmneziaWG parameters into the `[Interface]` section (or into the file referenced by `WGConfig`),
+exactly as in an `awg-quick` config. Every parameter is optional; omitted ones keep the plain WireGuard
+behavior. Keys are case-insensitive.
+
+```ini
+[Interface]
+Address = 10.200.200.2/32
+PrivateKey = uCTIK+56CPyCvwJxmU5dBfuyJvPuSXAq1FzHdnIxe1Q=
+
+# AWG 1.0 - junk packets before the handshake and padding of handshake messages
+Jc = 5
+Jmin = 10
+Jmax = 50
+S1 = 20
+S2 = 30
+# AWG 2.0 - padding of cookie / transport messages, magic headers (single value or range)
+S3 = 40
+S4 = 50
+H1 = 100000-200000
+H2 = 300000-400000
+H3 = 500000-600000
+H4 = 700000-800000
+# AWG 1.5 - signature ("protocol mimicry") packets sent before the handshake
+I1 = <b 0xc7000000010800000000000000000000><r 32><t>
+# I2 .. I5 work the same way
+
+# AWG 3.x
+HeaderProtectionKey = <32-byte key, base64 (awg genkey) or 64 hex chars>
+ContentPaddingAddition = 4-16
+RekeyAfterTime = 100-120
+RekeyTimeout = 4-6
+RejectAfterTime = 170-190
+KeepaliveTimeout = 8-12
+MaxHandshakeAttempts = 5
+RandomTrailers = true
+DisableCookies = false
+
+[Peer]
+PublicKey = QP+A67Z2UBrMgvNIdHv8gPel5URWNLS4B3ZQ2hQIZlg=
+Endpoint = my.ddns.example.com:51820
+PersistentKeepalive = 20-30   # AWG 3: a range is accepted, plain seconds still work
+```
+
+| Key | Version | Meaning | Must match the server |
+|---|---|---|---|
+| `Jc`, `Jmin`, `Jmax` | 1.0 | Number of junk packets (1-128) and their size range (`Jmin` <= `Jmax` <= 1280) | no |
+| `S1`, `S2` | 1.0 | Random padding added to the handshake init / response | yes |
+| `S3`, `S4` | 2.0 | Padding of cookie-reply / transport messages | yes |
+| `H1` - `H4` | 1.0 / 2.0 | Magic headers of init / response / cookie / transport. A single value (1.0) or a range `a-b` (2.0); the four ranges must not overlap | yes |
+| `I1` - `I5` | 1.5 | Signature packets that mimic another protocol. Tags: `<b 0x..>` static bytes, `<r N>` random bytes, `<rd N>` random digits, `<rc N>` random chars, `<t>` timestamp, `<c>` packet counter | no |
+| `HeaderProtectionKey` | 3.x | Key used to encrypt low-entropy header fields. Requires `S1`-`S4` >= 12 | yes |
+| `ContentPaddingAddition` | 3.x | Extra random padding range for data packets | recommended |
+| `RekeyAfterTime`, `RekeyTimeout`, `RejectAfterTime`, `KeepaliveTimeout` | 3.x | Override WireGuard timings, in seconds (value or range) | no |
+| `MaxHandshakeAttempts` | 3.x | Maximum handshake retries (value or range) | no |
+| `RandomTrailers` | 3.x | Append random trailers to packets | no |
+| `DisableCookies` | 3.x | Disable cookie replies | no |
+| `PersistentKeepalive` (`[Peer]`) | 3.x | Seconds or a range `a-b` | no |
+
+`wireproxy -n -c config.conf` validates the file (value ranges, `S1`-`S4` sizes, overlapping `H` ranges, the
+`HeaderProtectionKey` requirements) without starting the tunnel.
+
+If you only need a SOCKS5/HTTP proxy **on Android**, [WG Tunnel](https://github.com/wgtunnel/wgtunnel)
+(Proxy mode) is a better choice; this project targets Linux, macOS, Windows, servers and Docker.
 
 # Use with VPN
 
@@ -327,10 +393,9 @@ If nothing is set for `CheckAlive`, an empty JSON object with 200 will be the re
 
 The peer which the ICMP ping packet is routed to depends on the `AllowedIPs` set for each peers.
 
-# Secondary sponsors 
-<p>This project is supported by the DigitalOcean Open Source Credits Program:</p>
-<p>
-  <a href="https://www.digitalocean.com/">
-    <img src="https://opensource.nyc3.cdn.digitaloceanspaces.com/attribution/assets/SVG/DO_Logo_horizontal_blue.svg" width="201px">
-  </a>
-</p>
+
+# Credits
+
+- [windtf/wireproxy](https://github.com/windtf/wireproxy) (originally [pufferffish/wireproxy](https://github.com/pufferffish/wireproxy)) - the base of this project
+- [amnezia-vpn/amneziawg-go](https://github.com/amnezia-vpn/amneziawg-go) - the AmneziaWG userspace implementation
+- [artem-russkikh/wireproxy-awg](https://github.com/artem-russkikh/wireproxy-awg) - the original AmneziaWG port of wireproxy

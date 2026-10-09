@@ -8,7 +8,7 @@ The provided systemd unit assumes you have the wireproxy executable installed on
 
 1. Copy the `wireproxy.service` file from this directory to `/etc/systemd/system/`, or use the following cURL command to download it:
    ```bash
-   curl https://raw.githubusercontent.com/windtf/wireproxy/master/systemd/wireproxy.service | sudo tee /etc/systemd/system/wireproxy.service
+   curl https://raw.githubusercontent.com/bropines/awg-wireproxy/master/systemd/wireproxy.service | sudo tee /etc/systemd/system/wireproxy.service
    ```
 
 2. If necessary, customize the unit.
@@ -32,4 +32,4 @@ The provided systemd unit assumes you have the wireproxy executable installed on
 
 # Additional notes
 
-If you want to disable the extensive logging that's done by Wireproxy, simply add `-s` parameter to `ExecStart=`. This will enable the silent mode that was implemented with [pull/67](https://github.com/windtf/wireproxy/pull/67).
+If you want to disable the extensive logging that's done by Wireproxy, simply add `-s` parameter to `ExecStart=`. This will enable the silent mode that was implemented with [pull/67](https://github.com/bropines/awg-wireproxy/pull/67).
